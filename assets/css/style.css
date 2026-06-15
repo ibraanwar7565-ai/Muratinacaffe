@@ -238,6 +238,12 @@ body {
 .login-wrap { position: relative; min-height: 100vh; display: grid; place-items: center; overflow: hidden; }
 .login-bg { position: fixed; inset: 0; z-index: -2; background: #1c1209; }
 
+/* Single full-screen background video (with a slow cinematic zoom) */
+.login-bg .bg-video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    animation: kenburns 18s ease-out infinite alternate;
+}
+
 /* Each themed scene cross-fades; a slow zoom adds cinematic motion */
 .bg-scene { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
 .bg-scene.active { opacity: 1; }
