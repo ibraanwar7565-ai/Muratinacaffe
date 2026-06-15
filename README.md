@@ -48,9 +48,9 @@ in [`docs/blueprint/`](docs/blueprint):
 | **Suppliers** | CRUD supplier directory |
 | **Customers** | CRUD, purchase history, loyalty points (auto-awarded on sale) |
 | **Users** | Create/edit/delete, activate/deactivate, reset password, login history, audit logs |
-| **Reports** | Daily / Monthly / Product / Inventory / Profit / Cashier — export to **CSV, Excel, PDF** |
-| **Receipts** | Print, save-as-PDF, WhatsApp share |
-| **Settings** | Company name, logo, currency, tax rate, address, contacts, receipt footer |
+| **Reports** | Daily / Monthly / Product / Inventory / Profit / Cashier / **Attendance** — export to **CSV, Excel, PDF** |
+| **Receipts** | Print, save-as-PDF, WhatsApp share; configurable name, header note, width (80/58mm) & line toggles |
+| **Settings** (manager only) | Tabbed panel: **General** (system name, logo, currency, KRA PIN, **day/night** default theme), **Sales & Tax** (tax %, service charge %, loyalty rate, low-stock default, session timeout), **Receipt** (name, header note, footer, width, show/hide logo·tax·served·customer), **Security** (change own password, set **manager PIN**, reset user passwords) |
 | **Security** | Bcrypt password hashing, CSRF tokens, PDO prepared statements, session timeout, activity logging, RBAC |
 | **UI/UX** | Glassmorphism, **dark/light mode**, fully responsive, sidebar + topbar, smooth animations |
 
@@ -95,7 +95,7 @@ tab with their PIN.
 
 | Login | Role | How to sign in | Access |
 |-------|------|----------------|--------|
-| `admin` | Manager | password `Pass@123` | Everything |
+| `admin` | Manager | password `Pass@123` **or** PIN `194825` | Everything |
 | `cashier` | Cashier | password `Pass@123` | POS, own sales, receipts, customers |
 | `inventory` | Inventory Officer | password `Pass@123` | Products, stock, suppliers |
 | Brian Waiter | Waiter | **PIN `1234`** | POS, own sales, receipts, customers |

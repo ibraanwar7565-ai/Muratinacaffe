@@ -53,19 +53,28 @@ $set = settings();
     <a class="btn btn-outline-secondary" href="<?= BASE_URL ?>/pos.php"><i class="fa-solid fa-arrow-left"></i> Back to POS</a>
 </div>
 
-<div class="receipt" id="receipt">
-    <div class="login-logo" style="margin:0 auto .5rem;width:54px;height:54px;font-size:1.4rem"><i class="fa-solid fa-mug-hot"></i></div>
-    <h3><?= e($set['company_name'] ?? 'Muratina Café') ?></h3>
+<?php $rName = $set['receipt_name'] ?: ($set['company_name'] ?? 'Muratina Café'); ?>
+<div class="receipt" id="receipt" style="width:<?= ($set['receipt_width'] ?? '80') === '58' ? '230' : '300' ?>px">
+    <?php if (($set['receipt_show_logo'] ?? 1)): ?>
+        <div class="login-logo" style="margin:0 auto .5rem;width:54px;height:54px;font-size:1.4rem"><i class="fa-solid fa-mug-hot"></i></div>
+        <h3><?= e($rName) ?></h3>
+    <?php endif; ?>
     <div class="r-center"><?= e($set['address'] ?? '') ?></div>
     <div class="r-center"><?= e($set['phone'] ?? '') ?></div>
     <div class="r-center"><?= e($set['email'] ?? '') ?></div>
+    <?php if (!empty($set['kra_pin'])): ?><div class="r-center">PIN: <?= e($set['kra_pin']) ?></div><?php endif; ?>
+    <?php if (!empty($set['receipt_header_note'])): ?><div class="r-center"><?= e($set['receipt_header_note']) ?></div><?php endif; ?>
     <div class="r-line"></div>
 
     <table>
         <tr><td>Receipt #</td><td style="text-align:right"><?= e($sale['receipt_no']) ?></td></tr>
         <tr><td>Date</td><td style="text-align:right"><?= e(date('d M Y H:i', strtotime($sale['created_at']))) ?></td></tr>
-        <tr><td>Served by</td><td style="text-align:right"><?= e($sale['cashier'] ?? '—') ?><?= $sale['served_role'] ? ' (' . e(ucfirst($sale['served_role'])) . ')' : '' ?></td></tr>
-        <tr><td>Customer</td><td style="text-align:right"><?= e($sale['customer'] ?? 'Walk-in') ?></td></tr>
+        <?php if (($set['receipt_show_served'] ?? 1)): ?>
+            <tr><td>Served by</td><td style="text-align:right"><?= e($sale['cashier'] ?? '—') ?><?= $sale['served_role'] ? ' (' . e(ucfirst($sale['served_role'])) . ')' : '' ?></td></tr>
+        <?php endif; ?>
+        <?php if (($set['receipt_show_customer'] ?? 1)): ?>
+            <tr><td>Customer</td><td style="text-align:right"><?= e($sale['customer'] ?? 'Walk-in') ?></td></tr>
+        <?php endif; ?>
     </table>
     <div class="r-line"></div>
 
@@ -88,7 +97,12 @@ $set = settings();
         <?php if ($sale['discount'] > 0): ?>
             <tr><td>Discount</td><td style="text-align:right">- <?= money($sale['discount']) ?></td></tr>
         <?php endif; ?>
-        <tr><td>Tax</td><td style="text-align:right"><?= money($sale['tax']) ?></td></tr>
+        <?php if (($set['receipt_show_tax'] ?? 1)): ?>
+            <tr><td>Tax</td><td style="text-align:right"><?= money($sale['tax']) ?></td></tr>
+        <?php endif; ?>
+        <?php if (($sale['service_charge'] ?? 0) > 0): ?>
+            <tr><td>Service Charge</td><td style="text-align:right"><?= money($sale['service_charge']) ?></td></tr>
+        <?php endif; ?>
         <tr style="font-size:1.1em;font-weight:bold"><td>TOTAL</td><td style="text-align:right"><?= money($sale['total']) ?></td></tr>
         <tr><td>Payment</td><td style="text-align:right"><?= e($sale['payment_method']) ?></td></tr>
     </table>

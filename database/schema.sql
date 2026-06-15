@@ -118,6 +118,7 @@ CREATE TABLE sales (
   subtotal       DECIMAL(12,2) NOT NULL DEFAULT 0,
   discount       DECIMAL(12,2) NOT NULL DEFAULT 0,
   tax            DECIMAL(12,2) NOT NULL DEFAULT 0,
+  service_charge DECIMAL(12,2) NOT NULL DEFAULT 0,
   total          DECIMAL(12,2) NOT NULL DEFAULT 0,
   paid           DECIMAL(12,2) NOT NULL DEFAULT 0,
   change_due     DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -177,10 +178,23 @@ CREATE TABLE settings (
   logo          VARCHAR(255) DEFAULT NULL,
   currency      VARCHAR(10)  DEFAULT 'KSh',
   tax_rate      DECIMAL(5,2) DEFAULT 16.00,
+  service_charge DECIMAL(5,2) DEFAULT 0.00,
+  loyalty_rate  INT          DEFAULT 100,   -- amount spent per 1 loyalty point
+  low_stock_default INT      DEFAULT 5,
   address       VARCHAR(255) DEFAULT 'Nairobi, Kenya',
   phone         VARCHAR(40)  DEFAULT '+254 700 000 000',
   email         VARCHAR(150) DEFAULT 'hello@muratinacafe.co.ke',
-  receipt_footer VARCHAR(255) DEFAULT 'Thank you for dining with us. Karibu tena!'
+  kra_pin       VARCHAR(40)  DEFAULT NULL,
+  default_theme ENUM('light','dark') DEFAULT 'light',
+  session_timeout INT        DEFAULT 30,    -- minutes of inactivity
+  receipt_name  VARCHAR(150) DEFAULT NULL,  -- header shown on the receipt
+  receipt_header_note VARCHAR(255) DEFAULT NULL,
+  receipt_footer VARCHAR(255) DEFAULT 'Thank you for dining with us. Karibu tena!',
+  receipt_width ENUM('80','58') DEFAULT '80',
+  receipt_show_logo     TINYINT(1) DEFAULT 1,
+  receipt_show_tax      TINYINT(1) DEFAULT 1,
+  receipt_show_served   TINYINT(1) DEFAULT 1,
+  receipt_show_customer TINYINT(1) DEFAULT 1
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -191,9 +205,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- Default users. All passwords below are: Pass@123
 -- (bcrypt hash generated with PHP password_hash)
--- Waiter passcodes below are the PINs: Brian = 1234, Aisha = 5678
+-- Manager passcode (PIN) = 194825 ; waiter PINs: Brian = 1234, Aisha = 5678
 INSERT INTO users (full_name, username, email, phone, password_hash, passcode, role) VALUES
-('System Manager', 'admin',     'admin@muratinacafe.co.ke',  '+254700000001', '$2y$12$gFagdw0AGMmV8gBp/j6hsOHjcsu/hDTkXvv6GRfdJ34GFSdVz.2Xq', NULL, 'manager'),
+('System Manager', 'admin',     'admin@muratinacafe.co.ke',  '+254700000001', '$2y$12$gFagdw0AGMmV8gBp/j6hsOHjcsu/hDTkXvv6GRfdJ34GFSdVz.2Xq', '$2y$12$QyHa75WDHWQyKkBgPKlmbeRjY04K.JSgxALgya6xMhiqtv4tBwwJ2', 'manager'),
 ('Jane Cashier',   'cashier',   'cashier@muratinacafe.co.ke','+254700000002', '$2y$12$gFagdw0AGMmV8gBp/j6hsOHjcsu/hDTkXvv6GRfdJ34GFSdVz.2Xq', NULL, 'cashier'),
 ('Mike Stocks',    'inventory', 'stock@muratinacafe.co.ke',  '+254700000003', '$2y$12$gFagdw0AGMmV8gBp/j6hsOHjcsu/hDTkXvv6GRfdJ34GFSdVz.2Xq', NULL, 'inventory'),
 ('Brian Waiter',   'brian',     NULL, '+254700000004', '$2y$12$gFagdw0AGMmV8gBp/j6hsOHjcsu/hDTkXvv6GRfdJ34GFSdVz.2Xq', '$2y$12$Mg/sHZuRwLLBEsxClMGO8efrU4JOS6drGamqOq3pgSBJ7OYsXDyo.', 'waiter'),

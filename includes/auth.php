@@ -8,8 +8,10 @@ require_once __DIR__ . '/functions.php';
 function enforce_timeout(): void
 {
     if (isset($_SESSION['user'])) {
-        $last = $_SESSION['last_activity'] ?? time();
-        if (time() - $last > SESSION_TIMEOUT) {
+        $mins  = (int) (settings()['session_timeout'] ?? 0);
+        $limit = $mins > 0 ? $mins * 60 : SESSION_TIMEOUT;
+        $last  = $_SESSION['last_activity'] ?? time();
+        if (time() - $last > $limit) {
             logout_user();
             redirect('index.php?timeout=1');
         }

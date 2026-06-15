@@ -25,6 +25,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect('dashboard.php');
             }
             $error = 'Invalid username or password.';
+        } elseif ($do === 'reset_password') {
+            // Forgot password — a manager authorises the reset with their PIN
+            $mgr = user_by_passcode($_POST['manager_pin'] ?? '');
+            $target = trim($_POST['reset_username'] ?? '');
+            $newPw  = $_POST['reset_password'] ?? '';
+            if (!$mgr || $mgr['role'] !== 'manager') {
+                $error = 'A valid manager passcode is required to reset a password.';
+            } elseif (strlen($newPw) < 6) {
+                $error = 'New password must be at least 6 characters.';
+            } else {
+                $stmt = db()->prepare('SELECT id, full_name FROM users WHERE username = ? LIMIT 1');
+                $stmt->execute([$target]);
+                $u = $stmt->fetch();
+                if (!$u) {
+                    $error = 'No user found with that username.';
+                } else {
+                    db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+                        ->execute([password_hash($newPw, PASSWORD_BCRYPT), $u['id']]);
+                    $notice = 'Password reset for ' . $u['full_name'] . '. They can now sign in.';
+                }
+            }
         } elseif ($do === 'login') {
             // PIN login (waiters and any staff with a passcode)
             if (attempt_passcode_login($pin)) {
@@ -123,6 +144,20 @@ $set = settings();
                     <label class="remember"><input type="checkbox" name="remember"> Remember me</label>
                 </div>
             </div>
+
+            <div id="resetPanel" class="d-none">
+                <div class="staff-fields">
+                    <h6 style="color:#fff;font-weight:700">Reset a forgotten password</h6>
+                    <div class="input-icon mb-2"><i class="fa-solid fa-user"></i>
+                        <input type="text" name="reset_username" class="form-control" placeholder="Username to reset"></div>
+                    <div class="input-icon mb-2"><i class="fa-solid fa-lock"></i>
+                        <input type="password" name="reset_password" class="form-control" placeholder="New password"></div>
+                    <div class="input-icon mb-2"><i class="fa-solid fa-id-badge"></i>
+                        <input type="text" name="manager_pin" class="form-control" inputmode="numeric" placeholder="Manager PIN"></div>
+                    <button type="submit" name="do" value="reset_password" class="pos-btn primary w-100"><i class="fa-solid fa-rotate"></i> Reset Password</button>
+                    <a href="#" class="pt-toggle d-block mt-2" id="cancelReset">Cancel</a>
+                </div>
+            </div>
         </div>
 
         <!-- Right: brand + action buttons -->
@@ -142,7 +177,8 @@ $set = settings();
             <button type="submit" name="do" value="break" class="pos-btn"><i class="fa-solid fa-mug-saucer"></i> BREAK</button>
 
             <a href="#" class="pt-toggle" id="toggleMode"><i class="fa-solid fa-user-tie"></i> <span>Manager / Cashier password login</span></a>
-            <div class="pt-demo">Waiter PINs <code>1234</code> · <code>5678</code> — Staff <code>admin</code> / <code>Pass@123</code></div>
+            <a href="#" class="pt-toggle" id="forgotLink"><i class="fa-solid fa-circle-question"></i> Forgot password?</a>
+            <div class="pt-demo">Waiter PINs <code>1234</code> · <code>5678</code> — Manager PIN <code>194825</code> — Staff <code>admin</code> / <code>Pass@123</code></div>
         </div>
     </form>
 
@@ -173,20 +209,30 @@ $set = settings();
     refresh();
 })();
 
-// ---- Toggle PIN <-> Staff password ----
-document.getElementById('toggleMode').addEventListener('click', function (e) {
-    e.preventDefault();
-    const staff = document.getElementById('staffPanel');
-    const pinP = document.getElementById('pinPanel');
-    const toStaff = staff.classList.contains('d-none');
-    staff.classList.toggle('d-none', !toStaff);
-    pinP.classList.toggle('d-none', toStaff);
-    document.getElementById('loginMode').value = toStaff ? 'staff' : 'pin';
-    this.querySelector('span').textContent = toStaff ? 'Use waiter PIN keypad' : 'Manager / Cashier password login';
-    // Clock buttons only make sense in PIN mode
-    document.querySelectorAll('.pos-btn:not(.primary)').forEach(b => b.style.display = toStaff ? 'none' : '');
-});
-<?php if ($loginMode === 'staff'): ?>document.getElementById('toggleMode').click();<?php endif; ?>
+// ---- Panel switching: PIN / Staff password / Reset ----
+const pinP = document.getElementById('pinPanel');
+const staffP = document.getElementById('staffPanel');
+const resetP = document.getElementById('resetPanel');
+const actionBtns = document.querySelectorAll('.pt-right .pos-btn'); // LOGIN + clock buttons
+const toggleModeLink = document.getElementById('toggleMode');
+
+function showPanel(which) {
+    pinP.classList.toggle('d-none', which !== 'pin');
+    staffP.classList.toggle('d-none', which !== 'staff');
+    resetP.classList.toggle('d-none', which !== 'reset');
+    document.getElementById('loginMode').value = which === 'staff' ? 'staff' : 'pin';
+    // The right-side buttons are for login/attendance; hide them while resetting.
+    actionBtns.forEach(b => {
+        const clock = !b.classList.contains('primary');
+        b.style.display = which === 'reset' ? 'none' : (which === 'staff' && clock ? 'none' : '');
+    });
+    toggleModeLink.querySelector('span').textContent =
+        which === 'staff' ? 'Use waiter PIN keypad' : 'Manager / Cashier password login';
+}
+toggleModeLink.addEventListener('click', e => { e.preventDefault(); showPanel(staffP.classList.contains('d-none') ? 'staff' : 'pin'); });
+document.getElementById('forgotLink').addEventListener('click', e => { e.preventDefault(); showPanel('reset'); });
+document.getElementById('cancelReset').addEventListener('click', e => { e.preventDefault(); showPanel('pin'); });
+<?php if ($loginMode === 'staff'): ?>showPanel('staff');<?php endif; ?>
 
 // ---- Cinematic background ----
 (function () {

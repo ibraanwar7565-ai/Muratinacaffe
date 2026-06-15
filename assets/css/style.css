@@ -148,6 +148,13 @@ body {
 
 .section-title { font-weight: 700; margin: 0 0 1rem; font-size: 1.05rem; }
 
+/* Settings tabs + toggles */
+.settings-tabs .nav-link { color: var(--muted); font-weight: 600; border-radius: 11px; }
+.settings-tabs .nav-link.active { background: var(--brand-grad); color: #fff; }
+.toggle { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: .5rem .85rem; font-weight: 600; cursor: pointer; }
+.toggle input { width: 17px; height: 17px; accent-color: var(--brand); }
+
 /* ---------- Tables ---------- */
 .table-card { overflow: hidden; }
 .table { margin: 0; color: var(--text); }

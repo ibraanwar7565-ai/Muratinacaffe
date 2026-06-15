@@ -66,20 +66,22 @@ try {
         ];
     }
 
+    $set      = settings();
     $discount = min($discount, $subtotal);
-    $taxRate  = (float) (settings()['tax_rate'] ?? 0);
-    $tax      = round(($subtotal - $discount) * $taxRate / 100, 2);
-    $total    = round($subtotal - $discount + $tax, 2);
+    $taxable  = $subtotal - $discount;
+    $tax      = round($taxable * (float) ($set['tax_rate'] ?? 0) / 100, 2);
+    $service  = round($taxable * (float) ($set['service_charge'] ?? 0) / 100, 2);
+    $total    = round($taxable + $tax + $service, 2);
 
     $receiptNo = 'RCP-' . date('ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
 
     $saleStmt = $pdo->prepare(
-        'INSERT INTO sales (receipt_no, user_id, customer_id, subtotal, discount, tax, total, paid, change_due, payment_method, note)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+        'INSERT INTO sales (receipt_no, user_id, customer_id, subtotal, discount, tax, service_charge, total, paid, change_due, payment_method, note)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
     );
     $saleStmt->execute([
         $receiptNo, current_user()['id'], $custId,
-        $subtotal, $discount, $tax, $total, $total, 0, $method, $note,
+        $subtotal, $discount, $tax, $service, $total, $total, 0, $method, $note,
     ]);
     $saleId = (int) $pdo->lastInsertId();
 
@@ -98,9 +100,10 @@ try {
         $moveStmt->execute([$r['id'], 'out', $r['qty'], 'Sale ' . $receiptNo, current_user()['id']]);
     }
 
-    // Loyalty: 1 point per 100 spent
+    // Loyalty: 1 point per configurable amount spent
     if ($custId) {
-        $points = (int) floor($total / 100);
+        $rate = max(1, (int) ($set['loyalty_rate'] ?? 100));
+        $points = (int) floor($total / $rate);
         if ($points > 0) {
             $pdo->prepare('UPDATE customers SET loyalty_points = loyalty_points + ? WHERE id = ?')
                 ->execute([$points, $custId]);

@@ -26,14 +26,16 @@ $items = $pdo->prepare('SELECT * FROM sale_items WHERE sale_id = ?');
 $items->execute([$sale['id']]);
 $items = $items->fetchAll();
 $set = settings();
+$width = ($set['receipt_width'] ?? '80') === '58' ? '58' : '80';
+$rName = $set['receipt_name'] ?: ($set['company_name'] ?? 'Muratina Café');
 ?>
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt <?= e($sale['receipt_no']) ?></title>
 <style>
-/* Thermal-printer layout — 80mm roll, bold and high-contrast */
-@page { size: 80mm auto; margin: 0; }
+/* Thermal-printer layout — bold and high-contrast, width from settings */
+@page { size: <?= $width ?>mm auto; margin: 0; }
 * { box-sizing: border-box; }
-body { font-family: 'Courier New', 'Consolas', monospace; font-size: 13px; font-weight: 700;
-       width: 80mm; margin: 0 auto; padding: 4mm; color: #000; line-height: 1.5; }
+body { font-family: 'Courier New', 'Consolas', monospace; font-size: <?= $width === '58' ? '12' : '13' ?>px; font-weight: 700;
+       width: <?= $width ?>mm; margin: 0 auto; padding: 4mm; color: #000; line-height: 1.5; }
 h2 { text-align: center; margin: .2rem 0; font-size: 19px; font-weight: 800; letter-spacing: .5px; }
 .c { text-align: center; }
 .line { border-top: 2px dashed #000; margin: .45rem 0; }
@@ -42,18 +44,20 @@ td { padding: 2px 0; font-weight: 700; vertical-align: top; }
 .r { text-align: right; }
 .tot { font-weight: 800; font-size: 1.25em; }
 .tot td { border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 4px 0; }
-.big { font-size: 15px; }
+.big { font-size: <?= $width === '58' ? '13' : '15' ?>px; }
 </style></head><body onload="window.print()">
-<h2><?= e($set['company_name'] ?? 'Muratina Café') ?></h2>
+<?php if (($set['receipt_show_logo'] ?? 1)): ?><h2><?= e($rName) ?></h2><?php endif; ?>
 <div class="c"><?= e($set['address'] ?? '') ?></div>
 <div class="c"><?= e($set['phone'] ?? '') ?></div>
 <?php if (!empty($set['email'])): ?><div class="c"><?= e($set['email']) ?></div><?php endif; ?>
+<?php if (!empty($set['kra_pin'])): ?><div class="c">PIN: <?= e($set['kra_pin']) ?></div><?php endif; ?>
+<?php if (!empty($set['receipt_header_note'])): ?><div class="c"><?= e($set['receipt_header_note']) ?></div><?php endif; ?>
 <div class="line"></div>
 <table>
 <tr><td>Receipt</td><td class="r"><?= e($sale['receipt_no']) ?></td></tr>
 <tr><td>Date</td><td class="r"><?= e(date('d M Y H:i', strtotime($sale['created_at']))) ?></td></tr>
-<tr><td>Served by</td><td class="r"><?= e($sale['cashier'] ?? '—') ?><?= $sale['served_role'] ? ' (' . e(ucfirst($sale['served_role'])) . ')' : '' ?></td></tr>
-<tr><td>Customer</td><td class="r"><?= e($sale['customer'] ?? 'Walk-in') ?></td></tr>
+<?php if (($set['receipt_show_served'] ?? 1)): ?><tr><td>Served by</td><td class="r"><?= e($sale['cashier'] ?? '—') ?><?= $sale['served_role'] ? ' (' . e(ucfirst($sale['served_role'])) . ')' : '' ?></td></tr><?php endif; ?>
+<?php if (($set['receipt_show_customer'] ?? 1)): ?><tr><td>Customer</td><td class="r"><?= e($sale['customer'] ?? 'Walk-in') ?></td></tr><?php endif; ?>
 </table><div class="line"></div>
 <table class="big">
 <?php foreach ($items as $it): ?>
@@ -63,7 +67,8 @@ td { padding: 2px 0; font-weight: 700; vertical-align: top; }
 <table>
 <tr><td>Subtotal</td><td class="r"><?= money($sale['subtotal']) ?></td></tr>
 <?php if ($sale['discount'] > 0): ?><tr><td>Discount</td><td class="r">-<?= money($sale['discount']) ?></td></tr><?php endif; ?>
-<tr><td>Tax</td><td class="r"><?= money($sale['tax']) ?></td></tr>
+<?php if (($set['receipt_show_tax'] ?? 1)): ?><tr><td>Tax</td><td class="r"><?= money($sale['tax']) ?></td></tr><?php endif; ?>
+<?php if (($sale['service_charge'] ?? 0) > 0): ?><tr><td>Service</td><td class="r"><?= money($sale['service_charge']) ?></td></tr><?php endif; ?>
 <tr class="tot"><td>TOTAL</td><td class="r"><?= money($sale['total']) ?></td></tr>
 <tr><td>Paid via</td><td class="r"><?= e($sale['payment_method']) ?></td></tr>
 </table><div class="line"></div>

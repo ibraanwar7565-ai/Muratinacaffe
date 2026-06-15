@@ -14,7 +14,7 @@ $pageTitle = 'POS Sales';
 $activeNav = 'pos';
 require __DIR__ . '/includes/header.php';
 ?>
-<script>window.CSRF = "<?= csrf_token() ?>"; window.TAX_RATE = <?= $taxRate ?>;</script>
+<script>window.CSRF = "<?= csrf_token() ?>"; window.TAX_RATE = <?= $taxRate ?>; window.SVC_RATE = <?= (float) (settings()['service_charge'] ?? 0) ?>;</script>
 
 <div class="pos-layout">
     <!-- Products -->
@@ -59,6 +59,9 @@ require __DIR__ . '/includes/header.php';
                 <span><input type="number" id="cDiscount" value="0" min="0" class="form-control form-control-sm text-end" style="width:90px;display:inline-block" oninput="POS.render()"></span>
             </div>
             <div class="cart-line"><span>Tax (<?= $taxRate ?>%)</span><span id="cTax"><?= money(0) ?></span></div>
+            <?php if ((float) (settings()['service_charge'] ?? 0) > 0): ?>
+            <div class="cart-line"><span>Service (<?= (float) settings()['service_charge'] ?>%)</span><span id="cSvc"><?= money(0) ?></span></div>
+            <?php endif; ?>
             <div class="cart-line cart-total"><span>Total</span><span id="cTotal"><?= money(0) ?></span></div>
 
             <div class="pay-grid">
@@ -121,8 +124,10 @@ const POS = {
     totals() {
         const sub = this.cart.reduce((s, i) => s + i.price * i.qty, 0);
         let disc = Math.min(parseFloat(document.getElementById('cDiscount').value) || 0, sub);
-        const tax = (sub - disc) * (window.TAX_RATE / 100);
-        return { sub, disc, tax, total: sub - disc + tax };
+        const taxable = sub - disc;
+        const tax = taxable * (window.TAX_RATE / 100);
+        const svc = taxable * ((window.SVC_RATE || 0) / 100);
+        return { sub, disc, tax, svc, total: taxable + tax + svc };
     },
 
     render() {
@@ -144,6 +149,8 @@ const POS = {
         const t = this.totals();
         document.getElementById('cSubtotal').textContent = fmtMoney(t.sub);
         document.getElementById('cTax').textContent = fmtMoney(t.tax);
+        const svcEl = document.getElementById('cSvc');
+        if (svcEl) svcEl.textContent = fmtMoney(t.svc);
         document.getElementById('cTotal').textContent = fmtMoney(t.total);
         document.getElementById('chargeAmt').textContent = fmtMoney(t.total);
     },
