@@ -53,6 +53,22 @@ in [`docs/blueprint/`](docs/blueprint):
 | **Settings** (manager only) | Tabbed panel: **General** (system name, logo, currency, KRA PIN, **day/night** default theme), **Sales & Tax** (tax %, service charge %, loyalty rate, low-stock default, session timeout), **Receipt** (name, header note, footer, width, show/hide logo·tax·served·customer), **Security** (change own password, set **manager PIN**, reset user passwords) |
 | **Security** | Bcrypt password hashing, CSRF tokens, PDO prepared statements, session timeout, activity logging, RBAC |
 | **UI/UX** | Glassmorphism, **dark/light mode**, fully responsive, sidebar + topbar, smooth animations |
+| **PWA** | Installable as a **desktop / mobile app** (manifest + service worker), app icons, offline shell, and an in-app **Install** button |
+
+---
+
+## 📲 Install as an app (PWA)
+
+Muratina POS is a Progressive Web App, so it can be installed like a native app:
+
+- **Desktop (Chrome/Edge):** open the site, then click the **Install** button
+  (bottom-right) or the install icon in the address bar.
+- **Android (Chrome):** menu → *Install app* / *Add to Home screen*.
+- **iOS (Safari):** Share → *Add to Home Screen*.
+
+It launches in its own window (no browser chrome), keeps a cached app shell, and
+shows a friendly offline page when there's no connection. Installability needs
+`https://` **or** `http://localhost` (Laragon's localhost works out of the box).
 
 ---
 

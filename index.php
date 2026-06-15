@@ -77,9 +77,17 @@ $set = settings();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login · <?= e($set['company_name'] ?? 'Muratina Café') ?></title>
+    <!-- PWA -->
+    <link rel="manifest" href="<?= BASE_URL ?>/manifest.webmanifest">
+    <meta name="theme-color" content="#b5651d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" href="<?= BASE_URL ?>/assets/img/favicon-32.png" sizes="32x32">
+    <link rel="apple-touch-icon" href="<?= BASE_URL ?>/assets/img/apple-touch-icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+    <script>window.BASE_URL = "<?= BASE_URL ?>";</script>
 </head>
 <body>
 <div class="login-wrap">
@@ -210,5 +218,6 @@ document.getElementById('forgotLink').addEventListener('click', e => { e.prevent
 document.getElementById('cancelReset').addEventListener('click', e => { e.preventDefault(); showPanel('pin'); });
 <?php if ($loginMode === 'staff'): ?>showPanel('staff');<?php endif; ?>
 </script>
+<script src="<?= BASE_URL ?>/assets/js/pwa.js"></script>
 </body>
 </html>

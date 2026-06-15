@@ -1,0 +1,13 @@
+# Muratina Café POS — minimal Apache config (Laragon-friendly)
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+    AddType text/javascript .js
+</IfModule>
+
+# Allow the service worker to control the whole app scope
+<IfModule mod_headers.c>
+    <FilesMatch "sw\.js$">
+        Header set Service-Worker-Allowed "/"
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
